@@ -47,22 +47,22 @@ public:
     mText.mAlign = EAlign::Near;
     mText.mVAlign = EVAlign::Top;
         
-//    mTimer = std::unique_ptr<Timer>(Timer::Create([&](Timer& t) {
-//
-//      SetDirty(false);
-//    }, 20));
+   mTimer = std::unique_ptr<Timer>(Timer::Create([&](Timer& t) {
+
+     SetDirty(false);
+   }, 20));
         
-//    SetActionFunction([&](IControl* pCaller) {
-//      SetAnimation([&](IControl* pCaller) {
-//        float p = pCaller->GetAnimationProgress();
-//        mUniforms[kTime] = p;
-//
-//        if (p > 1.) {
-//          pCaller->OnEndAnimation();
-//        }
-//
-//      }, 10000);
-//    });
+   SetActionFunction([&](IControl* pCaller) {
+     SetAnimation([&](IControl* pCaller) {
+       float p = pCaller->GetAnimationProgress();
+       mUniforms[kTime] = p*10;
+
+       if (p > 1.) {
+         pCaller->OnEndAnimation();
+       }
+
+     }, 10000);
+   });
 
     WDL_String err;
     
@@ -167,7 +167,7 @@ private:
     canvas->restore();
   }
 
-//  std::unique_ptr<Timer> mTimer;
+  std::unique_ptr<Timer> mTimer;
   SkPaint mPaint;
   SkString mShaderStr;
   sk_sp<SkRuntimeEffect> mRTEffect;

@@ -33,6 +33,7 @@ IPlugInstrument::IPlugInstrument(const InstanceInfo& info)
 #endif
 
 //    pGraphics->EnableLiveEdit(true);
+    pGraphics->ShowFPSDisplay(true);
     pGraphics->LoadFont("Roboto-Regular", ROBOTO_FN);
     const IRECT b = pGraphics->GetBounds().GetPadded(-20.f);
     const IRECT lfoPanel = b.GetFromLeft(300.f).GetFromTop(200.f);
@@ -44,7 +45,30 @@ IPlugInstrument::IPlugInstrument(const InstanceInfo& info)
 //    pGraphics->AttachControl(new IVMultiSliderControl<4>(b.GetGridCell(0, 2, 2).GetPadded(-30), "", DEFAULT_STYLE, kParamAttack, EDirection::Vertical, 0.f, 1.f));
     const IRECT controls = b.GetGridCell(1, 2, 2);
     pGraphics->AttachControl(new IVKnobControl(controls.GetGridCell(0, 2, 6).GetCentredInside(90), kParamGain, "Gain"));
-    pGraphics->AttachControl(new IVKnobControl(controls.GetGridCell(1, 2, 6).GetCentredInside(90), kParamNoteGlideTime, "Glide"));
+//    pGraphics->AttachControl(new IVKnobControl(controls.GetGridCell(1, 2, 6).GetCentredInside(90), kParamNoteGlideTime, "Glide"));
+//    pGraphics->AttachControl(new IShaderControl(controls.GetGridCell(1, 2, 6).GetCentredInside(90),
+//        R"(
+//          uniform float uTime;
+//          uniform float2 uDim;
+//          uniform float2 uMouse;
+//          uniform float2 uMouseBut;
+//
+//          float f(vec3 p) {
+//              p.z -= uTime * 10.;
+//              float a = p.z * .1;
+//              p.xy *= mat2(cos(a), sin(a), -sin(a), cos(a));
+//              return .1 - length(cos(p.xy) + sin(p.yz));
+//          }
+//
+//          half4 main(vec2 fragcoord) {
+//              vec3 d = .5 - fragcoord.xy1 / uDim.y;
+//              vec3 p=vec3(0);
+//              for (int i = 0; i < 32; i++) {
+//                p += f(p) * d;
+//              }
+//              return ((sin(p) + vec3(2, 5, 12)) / length(p)).xyz1;
+//          }
+//        )"));
     const IRECT sliders = controls.GetGridCell(2, 2, 6).Union(controls.GetGridCell(3, 2, 6)).Union(controls.GetGridCell(4, 2, 6));
     pGraphics->AttachControl(new IVSliderControl(sliders.GetGridCell(0, 1, 4).GetMidHPadded(30.), kParamAttack, "Attack"));
     pGraphics->AttachControl(new IVSliderControl(sliders.GetGridCell(1, 1, 4).GetMidHPadded(30.), kParamDecay, "Decay"));

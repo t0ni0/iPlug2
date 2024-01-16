@@ -643,8 +643,56 @@ void IVKnobControl::DrawWidget(IGraphics& g)
   const float cx = mWidgetBounds.MW(), cy = mWidgetBounds.MH();
   IRECT knobHandleBounds = mWidgetBounds.GetCentredInside((widgetRadius - mTrackToHandleDistance) * 2.f );
   const float angle = mAngle1 + (static_cast<float>(GetValue()) * (mAngle2 - mAngle1));
+    
+//  DrawPressableShape(g, /*mShape*/ EVShape::Ellipse, knobHandleBounds, mMouseDown, mMouseIsOver, IsDisabled());
+    
+    IRECT shadowBounds = knobHandleBounds.GetTranslated(mStyle.shadowOffset, mStyle.shadowOffset);
+    const IBlend blend = mControl->GetBlend();
+    auto fillPattern = IPattern::CreateRadialGradient(cx - widgetRadius * 0.5f, cy - widgetRadius * 0.5f, widgetRadius * 2.f, {{IColor(255, 120, 120, 120), 0.f},
+        {IColor(255, 75, 75, 75), 0.5f},
+        {IColor(255, 60, 60, 60), 1.f}});
+    auto insideFillPattern = IPattern::CreateRadialGradient(cx - widgetRadius * 0.4f, cy - widgetRadius * 0.4f, widgetRadius * 1.6f, {
+        {IColor(255, 60, 60, 60), 0.f},
+        {IColor(255, 75, 75, 75), 0.5f},
+        {IColor(255, 120, 120, 120), 1.f}
+    });
+    auto outlinePattern = IPattern::CreateSweepGradient(cx, cy, {{IColor(255, 200, 200, 200), 0.f},
+        {IColor(255, 100, 100, 125), 0.5f},
+        {IColor(255, 200, 200, 200), 1.f}
+    }, -45.f, 315.f);
+
+    
+    if(!mMouseDown && !IsDisabled() && mStyle.drawShadows)
+    {
+//      g.FillEllipse(GetColor(kSH), shadowBounds);
+        g.PathClear();
+        g.PathEllipse(shadowBounds);
+        g.PathFill(GetColor(kSH), IFillOptions(), 0);
+    }
+    
+//    g.FillEllipse(GetColor(kFG), knobHandleBounds/*, &blend*/);
+    g.PathClear();
+    g.PathEllipse(knobHandleBounds);
+    g.PathFill(fillPattern, IFillOptions(), 0);
+    
+    g.PathClear();
+    g.PathEllipse(knobHandleBounds);
+    g.PathStroke(outlinePattern, 0.2f, IStrokeOptions(), 0);
+
+    g.PathClear();
+    g.PathEllipse(knobHandleBounds.GetScaledAboutCentre(0.8));
+    g.PathFill(insideFillPattern, IFillOptions(), 0);
+    
+    g.PathClear();
+    g.PathEllipse(knobHandleBounds.GetScaledAboutCentre(0.8));
+    g.PathStroke(outlinePattern, 0.2f, IStrokeOptions(), 0);
+
+ 
+    // Shade when hovered
+    if (mMouseIsOver)
+      g.FillEllipse(GetColor(kHL), knobHandleBounds, &blend);
+    
   DrawIndicatorTrack(g, angle, cx, cy, widgetRadius);
-  DrawPressableShape(g, /*mShape*/ EVShape::Ellipse, knobHandleBounds, mMouseDown, mMouseIsOver, IsDisabled());
   DrawPointer(g, angle, cx, cy, knobHandleBounds.W() / 2.f);
 }
 
@@ -652,13 +700,32 @@ void IVKnobControl::DrawIndicatorTrack(IGraphics& g, float angle, float cx, floa
 {
   if (mTrackSize > 0.f)
   {
-    g.DrawArc(GetColor(kX1), cx, cy, radius, angle >= mAnchorAngle ? mAnchorAngle : mAnchorAngle - (mAnchorAngle - angle), angle >= mAnchorAngle ? angle : mAnchorAngle, &mBlend, mTrackSize);
+      float a1 = angle >= mAnchorAngle ? mAnchorAngle : mAnchorAngle - (mAnchorAngle - angle);
+      float a2 = angle >= mAnchorAngle ? angle : mAnchorAngle;
+//      g.DrawArc(GetColor(kX1), cx, cy, radius, a1, a2, &mBlend, mTrackSize);
+//      g.DrawArc(GetColor(kX1), cx, cy, radius / 2.f, angle >= mAnchorAngle ? mAnchorAngle : mAnchorAngle - (mAnchorAngle - angle), angle >= mAnchorAngle ? angle : mAnchorAngle, &mBlend, mTrackSize);
+      
+      g.PathClear();
+      g.PathArc(cx, cy, radius, a1, a2);
+//      IRECT r = mRECT.FracRectVertical(1.0, true);
+//      auto pattern = IPattern::CreateSweepGradient(cx, cy, {{COLOR_RED, 0.f},{COLOR_BLUE, 1.f}}, -180.f, 180.f);
+      auto pattern = IPattern::CreateRadialGradient(cx, cy, radius * 2.0f, {{IColor(0, 255, 255, 255), 0.3f},
+          {IColor(0, 255, 255, 255), 0.4f},
+          {COLOR_WHITE, 0.5f},
+          {IColor(0, 255, 255, 255), 0.6f},
+          {IColor(0, 255, 255, 255), 0.7f}});
+//      auto pattern = IPattern::CreateLinearGradient(mRECT, EDirection::Vertical, {{COLOR_BLACK, 0.2f},{COLOR_RED, 0.3f},{COLOR_BLUE, 0.5f}})
+      auto strokeOptions = IStrokeOptions();
+      strokeOptions.mCapOption = ELineCap::Butt;
+      g.PathStroke(pattern, /* mTrackSize */ 0.5f, strokeOptions, &mBlend);
+//      g.PathStroke(COLOR_WHITE, mTrackSize, strokeOptions, &mBlend);
   }
 }
 
 void IVKnobControl::DrawPointer(IGraphics& g, float angle, float cx, float cy, float radius)
 {
-  g.DrawRadialLine(GetColor(kFR), cx, cy, angle, mInnerPointerFrac * radius, mOuterPointerFrac * radius, &mBlend, mPointerThickness);
+//    g.DrawRadialLine(GetColor(kFR), cx, cy, angle, mInnerPointerFrac * radius, mOuterPointerFrac * radius, &mBlend, mPointerThickness);
+    g.DrawRadialLine(IColor(200, 200, 200, 200), cx, cy, angle, 0.8 * radius, mOuterPointerFrac * radius, &mBlend, mPointerThickness);
 }
 
 void IVKnobControl::OnMouseDown(float x, float y, const IMouseMod& mod)
